@@ -11,25 +11,22 @@
  #include "ofMain.h"
  #include "BoundingBox.h"
 
- typedef bitset<8> bitmask;
+typedef unsigned char byte;
 
  template <class ObjectClass>
  class ofxColorTree {
- private:
+ public:
      struct ColorTreeNode {
          ColorTreeNode(ObjectClass *o) :
          object(o),
-         shouldMove(false),
-         shouldDelete(false),
-         color(ofVec3f::zero()){}
+         color(ofVec3f::zero()){};
+         ColorTreeNode(ObjectClass *o, ofVec3f c) :
+         object(o),
+         color(c){};
          ofVec3f color;
-         bool shouldMove;
-         bool shouldDelete;
          ObjectClass * object;
          //pointer reference to object stored
      };
-
- public:
      ofxColorTree() {
          currentLife = -1;
      };
@@ -54,21 +51,26 @@
          region = _region;
          currentLife = -1;
      };
-
+     
+     void release();
+     void setup();
+     void drawRegion();
      void update();
      void insert(ObjectClass *item);
-     void initializeTree();
+     void insert(ColorTreeNode item);
+
      void buildTree();
      void findEnclosingCube();
 
 
-     bitmask active_nodes = 0;
-     const int MIN_SIZE = 1;
+     byte active_nodes = 0;
+     const int MIN_SIZE = 2;
      int maxLifespan = 8;
      int currentLife = -1;
 
-     static bool treeReady;
-     static bool treeBuilt;
+     bool treeReady = false;
+     bool treeBuilt = false;
+     bool hasChildren = false;
 
      BoundingBox region;
      ofxColorTree * children[8];
