@@ -415,3 +415,98 @@ void ofxColorTree<ObjectClass>::insert(ColorTreeNode item) {
         buildTree();
     }
 };
+
+template <class ObjectClass>
+void ofxColorTree<ObjectClass>::getClosest(ObjectClass point, Closest & closestInfo) {
+    if (hasChildren) {
+        
+        // we have no starting point yet
+        // so get one
+        if (closestInfo.item == NULL) {
+            // check only active octants
+            for (int flags = active_nodes, i = 0; i < 8; flags >>=1, i++) {
+                if ((flags & 1) == 1) {
+                    children[i] -> getClosest(point, closestInfo);
+                    if (closestInfo.item != NULL) {
+                        // now we have a starting point
+                        getClosest(point, closestInfo);
+                        return;
+                    }
+                }
+            }
+        } else {
+            // we have a item set as closest
+            // we should check if this quad is
+            // closer then the current closest distance
+            for (int flags = active_nodes, i = 0; i < 8; flags >>=1, i++) {
+                if ((flags & 1) == 1) {
+                    ofVec3f center = children[i] -> region.getCenter();
+                    float dist = ofDistSquared(point.x, point.y, point.z, center.x, center.y, center.z);
+                    
+                    if (dist < closestInfo.dist) {
+                        children[i] -> getClosest(point, closestInfo);
+                    }
+
+                }
+            }
+        }
+        
+    } else {
+        
+        for (int i = 0; i < objects.size(); i++) {
+            
+            ObjectClass * item = objects[i].object;
+            
+            float dist = ofDistSquared(point.x, point.y, point.z, item -> x, item -> y, item -> z);
+            
+            if (dist < closestInfo.dist) {
+                closestInfo.dist = dist;
+                closestInfo.item = item;
+                closestInfo.tree = this;
+            }
+            
+        }
+    }
+    
+}
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(ObjectClass color) {
+    ofVec3f point = region.getPoint(color);
+    
+    return getClosestByPoint(point);
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(ObjectClass *color) {
+    ofVec3f point = region.getPoint(color);
+    return getClosestByPoint(point);
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(float r, float g, float b) {
+    ofVec3f point = region.getPoint(ofVec3f(r, g, b));
+    return getClosestByPoint(point);
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(ObjectClass *point) {
+    return getClosestByPoint(ObjectClass(point -> x, point -> y, point -> z));
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(float x, float y, float z) {
+    return getClosestByPoint(ObjectClass(x, y, z));
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(ObjectClass point) {
+    Closest closest = Closest();
+    getClosest(point, closest);
+    
+    return closest.item;
+};
+
+
+
+

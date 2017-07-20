@@ -52,10 +52,18 @@
      };
      
      void updateBox() {
-         box.setPosition((min.x + max.x)/2.0, (min.y + max.y)/2.0, (min.z + max.z)/2.0);
+         box.setPosition(getCenter());
          box.setWidth(abs(min.x - max.x));
          box.setHeight(abs(min.y - max.y));
          box.setDepth(abs(min.z - max.z));
+     };
+     
+     ofVec3f getPoint(ofVec3f color) {
+         return ofVec3f(ofMap(color.x, dim.x, bright.x, min.x, max.x), ofMap(color.y, dim.y, bright.y, min.y, max.y), ofMap(color.z, dim.z, bright.z, min.z, max.z));
+     };
+     
+     ofVec3f getPoint(ofVec3f *color) {
+         return ofVec3f(ofMap(color -> x, dim.x, bright.x, min.x, max.x), ofMap(color -> y, dim.y, bright.y, min.y, max.y), ofMap(color -> z, dim.z, bright.z, min.z, max.z));
      };
      
      ofVec3f getColor(ofVec3f point) {
@@ -75,6 +83,7 @@
      bool containsPoint(ofVec3f & point);
      bool containsColor(ofVec3f & color);
 
+     ofVec3f getCenter() { return ofVec3f((min.x + max.x)/2.0, (min.y + max.y)/2.0, (min.z + max.z)/2.0); };
      ofVec3f getMax()    { return max; };
      ofVec3f getMin()    { return min; };
      ofVec3f getBright() { return bright; };
