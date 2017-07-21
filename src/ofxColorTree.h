@@ -61,7 +61,15 @@ public:
     };
  
     ofxColorTree(BoundingBox _region, vector<NodeData<ObjectClass>> _objects) {
-        for(NodeData<ObjectClass> object:_objects) {
+        for(auto object:_objects) {
+            pending.push_back(*object);
+        }
+        region = _region;
+        currentLife = -1;
+    };
+    
+    ofxColorTree(BoundingBox _region, vector<NodeData<ObjectClass>*> _objects) {
+        for(auto object:_objects) {
             pending.push_back(object);
         }
         region = _region;
@@ -74,6 +82,8 @@ public:
     void update();
     ofxColorTreeNode<ObjectClass> insert(ObjectClass *item);
     void insert(NodeData<ObjectClass> & item);
+    void insert(NodeData<ObjectClass>* item);
+
  
     ObjectClass * getClosestByPoint(ObjectClass point);
     ObjectClass * getClosestByPoint(ObjectClass *point);
@@ -99,8 +109,8 @@ public:
     BoundingBox region;
     ofxColorTree * children[8];
     ofxColorTree * parent;
-    vector<NodeData<ObjectClass>> objects;
-    deque<NodeData<ObjectClass>> pending;
+    vector<NodeData<ObjectClass>*> objects;
+    deque<NodeData<ObjectClass>*> pending;
 
 protected:
     void getClosest(ObjectClass point, Closest & closestInfo);
