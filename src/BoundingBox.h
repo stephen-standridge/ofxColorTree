@@ -80,6 +80,25 @@
      bool contains(ofVec3f * point) {
          return min.x<=point -> x && point -> x<=max.x && min.y<=point -> y && point -> y<=max.y && min.z<=point -> z && point -> z<=max.z;
      };
+     
+     bool intersects(ofVec3f point, float radius) {
+         float distX = abs(point.x - getCenter().x);
+         float distY = abs(point.y - getCenter().y);
+         float distZ = abs(point.z - getCenter().z);
+         
+         if (distX > (box.getWidth()/2 + radius)) { return false; }
+         if (distY > (box.getHeight()/2 + radius)) { return false; }
+         if (distZ > (box.getDepth()/2 + radius)) { return false; }
+         
+         if (distX <= (box.getWidth()/2)) { return true; }
+         if (distY <= (box.getHeight()/2)) { return true; }
+         if (distZ <= (box.getDepth()/2)) { return true; }
+
+         float cornerDistance_sq = pow(distX - box.getWidth()/2, 2) + pow(distY - box.getHeight()/2, 2) + pow(distZ - box.getDepth()/2, 2);
+         
+         return (cornerDistance_sq <= pow(radius, 2));
+     }
+     
      bool containsPoint(ofVec3f & point);
      bool containsColor(ofVec3f & color);
 

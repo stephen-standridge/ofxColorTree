@@ -14,21 +14,27 @@
 
 typedef unsigned char byte;
 
+template <class ContainedClass>
+struct NodeData {
+    NodeData() : object(NULL), color(ofVec3f::zero()){};
+    NodeData(ContainedClass *o) : object(o), color(ofVec3f::zero()){};
+    NodeData(ContainedClass *o, ofVec3f c) : object(o), color(c){};
+    ofVec3f color;
+    bool shouldMove = false;
+    bool shouldDelete = false;
+    ContainedClass * object;
+};
+
+template <class ContainedClass>
+struct ofxColorTreeNode {
+    ofxColorTreeNode(NodeData<ContainedClass>* node) : data(node) {};
+//    ~ofxColorTreeNode() { delete data; };
+    NodeData<ContainedClass> *data;
+};
+
 template <class ObjectClass>
 class ofxColorTree {
 public:
-    struct ColorTreeNode {
-        ColorTreeNode(ObjectClass *o) :
-        object(o),
-        color(ofVec3f::zero()){};
-        ColorTreeNode(ObjectClass *o, ofVec3f c) :
-        object(o),
-        color(c){};
-        ofVec3f color;
-        ObjectClass * object;
-        //pointer reference to object stored
-    };
-    
     struct Closest {
         
         ofxColorTree<ObjectClass> * tree;
@@ -48,14 +54,14 @@ public:
 
     ofxColorTree(BoundingBox _region, vector<ObjectClass*> _objects) {
         for(ObjectClass* object:_objects) {
-            pending.push_back(ColorTreeNode(object));
+            pending.push_back(NodeData<ObjectClass>(object));
         }
         region = _region;
         currentLife = -1;
     };
  
-    ofxColorTree(BoundingBox _region, vector<ColorTreeNode> _objects) {
-        for(ColorTreeNode object:_objects) {
+    ofxColorTree(BoundingBox _region, vector<NodeData<ObjectClass>> _objects) {
+        for(NodeData<ObjectClass> object:_objects) {
             pending.push_back(object);
         }
         region = _region;
@@ -66,8 +72,8 @@ public:
     void setup();
     void drawRegion();
     void update();
-    void insert(ObjectClass *item);
-    void insert(ColorTreeNode item);
+    ofxColorTreeNode<ObjectClass> insert(ObjectClass *item);
+    void insert(NodeData<ObjectClass> & item);
  
     ObjectClass * getClosestByPoint(ObjectClass point);
     ObjectClass * getClosestByPoint(ObjectClass *point);
@@ -82,7 +88,7 @@ public:
 
 
     byte active_nodes = 0;
-    const int MIN_SIZE = 2;
+    const int MIN_SIZE = 1;
     int maxLifespan = 8;
     int currentLife = -1;
 
@@ -93,8 +99,8 @@ public:
     BoundingBox region;
     ofxColorTree * children[8];
     ofxColorTree * parent;
-    vector<ColorTreeNode> objects;
-    deque<ColorTreeNode> pending;
+    vector<NodeData<ObjectClass>> objects;
+    deque<NodeData<ObjectClass>> pending;
 
 protected:
     void getClosest(ObjectClass point, Closest & closestInfo);
