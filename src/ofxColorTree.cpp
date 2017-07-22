@@ -12,7 +12,7 @@
  void ofxColorTree<ObjectClass>::setup() {
     if (!treeBuilt) {
         while (pending.size() != 0) {
-            NodeData<ObjectClass>* item = pending.front();
+            shared_ptr<NodeData<ObjectClass>> item = pending.front();
             item -> color = region.getColor(item -> object);
             objects.push_back(item);
             pending.pop_front();
@@ -71,7 +71,7 @@
         BoundingBox(ofVec3f(min.x, center.y, center.z), ofVec3f(center.x, max.y, max.z), ofVec3f(dim.x, mid.y, mid.z), ofVec3f(mid.x, bright.y, bright.z))
     };
 
-    vector<NodeData<ObjectClass>*> list[8];
+    vector<shared_ptr<NodeData<ObjectClass>>> list[8];
     vector<int> delist;
 
     //go backwards so that removing them later doesnt mess up the order.
@@ -149,27 +149,33 @@ void ofxColorTree<ObjectClass>::drawRegion() {
         //prune any dead objects from the tree.
         for (int i = 0; i < objects.size(); i++) {
             
-//            if (objects[i].object -> shouldDelete) {
-//                objects.erase(objects.begin() + i);
-//                objectListSize--;
-//            }
+            if (objects[i] -> shouldDelete) {
+                objects[i] -> color = ofVec3f::zero();
+                objects[i] -> shouldDelete = false;
+                objects[i] -> shouldMove = false;
+                
+                objects.erase(objects.begin() + i);
+                objectListSize--;
+            }
         }
 
         objectListSize = objects.size();
 
         //go backwards so that moving them later doesnt mess up the order.
         for (int i = objects.size() - 1; i >= 0; i--) {
+            
+            
             //we should figure out if an object actually moved so that we know whether we need to update this node in the tree.
-//            if (objects[i].object -> shouldMove) {
-//                movedObjects.push_back(i);
-//            }
+            if (objects[i] -> shouldMove) {
+                
+                movedObjects.push_back(i);
+            }
         }
 
 
         //recursively update any child nodes.
         for (int flags = active_nodes, index = 0; flags > 0; flags >>=1, index++) {
             if ((flags & 1) == 1) {
-                
                 children[index] -> update();
             }
         }
@@ -190,6 +196,7 @@ void ofxColorTree<ObjectClass>::drawRegion() {
 
             //now, remove the object from the current node and insert it into the current containing node.
             current -> insert(objects[toMove]);   //this will try to insert the object as deep into the tree as we can go.
+            objects[toMove] -> shouldMove = false;
             objects.erase(objects.begin() + toMove);
         }
 
@@ -216,118 +223,16 @@ void ofxColorTree<ObjectClass>::drawRegion() {
  };
 
 template <class ObjectClass>
-ofxColorTreeNode<ObjectClass> ofxColorTree<ObjectClass>::insert(ObjectClass *item) {
-     NodeData<ObjectClass>* node = new NodeData<ObjectClass>(item);
+shared_ptr<NodeData<ObjectClass>> ofxColorTree<ObjectClass>::insert(ObjectClass *item) {
+     shared_ptr<NodeData<ObjectClass>> node(new NodeData<ObjectClass>(item));
      insert(node);
      
-     return ofxColorTreeNode<ObjectClass>(node);
+     return node;
 };
 
-//template <class ObjectClass>
-//void ofxColorTree<ObjectClass>::insert(NodeData<ObjectClass> & item) {
-//    /*make sure we're not inserting an object any deeper into the tree than we have to.
-//     -if the current node is an empty leaf node, just insert and leave it.*/
-//    if (objects.size() < 1 && active_nodes == 0) {
-//        item.color = region.getColor(item.object);
-//        objects.push_back(item);
-//        return;
-//    }
-//    
-//    ofVec3f dimensions = region.getMax() - region.getMin();
-//    
-//    //Check to see if the dimensions of the box are greater than the minimum dimensions
-//    if (dimensions.x <= MIN_SIZE && dimensions.y <= MIN_SIZE && dimensions.z <= MIN_SIZE) {
-//        item.color = region.getColor(item.object);
-//        objects.push_back(item);
-//        return;
-//    }
-//    
-//    ofVec3f spectrum = region.getBright() - region.getDim();
-//    
-//    ofVec3f min = region.getMin();
-//    ofVec3f dim = region.getDim();
-//    ofVec3f max = region.getMax();
-//    ofVec3f bright = region.getBright();
-//    
-//    ofVec3f halfDimension = dimensions / 2.0;
-//    ofVec3f halfSpectrum = spectrum / 2.0;
-//    
-//    ofVec3f center = min + halfDimension;
-//    ofVec3f mid = dim + halfSpectrum;
-//    
-//    //Find or create subdivided regions for each octant in the current region
-//    vector<BoundingBox> childOctant;
-//    for (int flags = active_nodes, index = 0; index < 8; flags >>=1, index++) {
-//        if ((flags & 1) == 1) {
-//            childOctant.push_back(children[index]->region);
-//        } else {
-//            switch(index) {
-//                case 0:
-//                    childOctant.push_back(BoundingBox(min, center, dim, mid));
-//                    break;
-//                case 1:
-//                    childOctant.push_back(BoundingBox(ofVec3f(center.x, min.y, min.z), ofVec3f(max.x, center.y, center.z), ofVec3f(mid.x, dim.y, dim.z), ofVec3f(bright.x, mid.y, mid.z)));
-//                    break;
-//                case 2:
-//                    childOctant.push_back(BoundingBox(ofVec3f(center.x, min.y, center.z), ofVec3f(max.x, center.y, max.z), ofVec3f(mid.x, dim.y, mid.z), ofVec3f(bright.x, mid.y, bright.z)));
-//                    break;
-//                case 3:
-//                    childOctant.push_back(BoundingBox(ofVec3f(min.x, min.y, center.z), ofVec3f(center.x, center.y, max.z), ofVec3f(dim.x, dim.y, mid.z), ofVec3f(mid.x, mid.y, bright.z)));
-//                    break;
-//                case 4:
-//                    childOctant.push_back(BoundingBox(ofVec3f(min.x, center.y, min.z), ofVec3f(center.x, max.y, center.z), ofVec3f(dim.x, mid.y, dim.z), ofVec3f(mid.x, bright.y, mid.z)));
-//                    break;
-//                case 5:
-//                    childOctant.push_back(BoundingBox(ofVec3f(center.x, center.y, min.z), ofVec3f(max.x, max.y, center.z), ofVec3f(mid.x, mid.y, dim.z), ofVec3f(bright.x, bright.y, mid.z)));
-//                    break;
-//                case 6:
-//                    childOctant.push_back(BoundingBox(center, max, mid, bright));
-//                    break;
-//                case 7:
-//                    childOctant.push_back(BoundingBox(ofVec3f(min.x, center.y, center.z), ofVec3f(center.x, max.y, max.z), ofVec3f(dim.x, mid.y, mid.z), ofVec3f(mid.x, bright.y, bright.z)));
-//                    break;
-//            }
-//        }
-//    }
-//    
-//    
-//    
-//    if (region.contains(item.object)) {
-//        bool found = false;
-//        //we will try to place the object into a child node. If we can't fit it in a child node, then we insert it into the current node object list.
-//        for (int flags = active_nodes, a = 0; a < 8; flags >>=1, a++) {
-//            //is the object fully contained within a quadrant?
-//            if (childOctant[a].contains(item.object)) {
-//                if ((flags & 1) == 1) {
-//                    children[a] -> insert(item);   //Add the item into that tree and let the child tree figure out what to do with it
-//                } else {
-//                    vector<NodeData<ObjectClass>> new_objects;
-//                    new_objects.push_back(item);
-//                    children[a] = new ofxColorTree(childOctant[a], new_objects);
-//                    children[a] -> parent = this;
-//                    active_nodes |= (byte)(1<<a);
-//                    children[a] -> setup();
-//                    hasChildren = true;
-//                }
-//                found = true;
-//            }
-//        }
-//        if(!found) {
-//            item.color = region.getColor(item.object);
-//            objects.push_back(item);
-//        }
-//        
-//    } else {
-//        //either the item lies outside of the enclosed bounding box or it is intersecting it. Either way, we need to rebuild
-//        //the entire tree by enlarging the containing bounding box
-//        //BoundingBox enclosingArea = FindBox();
-//        buildTree();
-//    }
-//    
-//}
 
 template <class ObjectClass>
-void ofxColorTree<ObjectClass>::insert(NodeData<ObjectClass>* item) {
+void ofxColorTree<ObjectClass>::insert(shared_ptr<NodeData<ObjectClass>> item) {
     /*make sure we're not inserting an object any deeper into the tree than we have to.
      -if the current node is an empty leaf node, just insert and leave it.*/
     if (objects.size() < 1 && active_nodes == 0) {
@@ -404,7 +309,7 @@ void ofxColorTree<ObjectClass>::insert(NodeData<ObjectClass>* item) {
                 if ((flags & 1) == 1) {
                     children[a] -> insert(item);   //Add the item into that tree and let the child tree figure out what to do with it
                 } else {
-                    vector<NodeData<ObjectClass>*> new_objects;
+                    vector<shared_ptr<NodeData<ObjectClass>>> new_objects;
                     new_objects.push_back(item);
                     children[a] = new ofxColorTree(childOctant[a], new_objects);
                     children[a] -> parent = this;
