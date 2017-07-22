@@ -43,6 +43,7 @@
     }
 
     if (dimensions.x <= MIN_SIZE && dimensions.y <= MIN_SIZE && dimensions.z <= MIN_SIZE) {
+        treeBuilt = true;
         return;
     }
 
@@ -120,6 +121,7 @@ void ofxColorTree<ObjectClass>::drawRegion() {
             }
         }
     }
+
     for (NodeData<ObjectClass> entry : objects) {
         ofPushMatrix();
         ofSetColor(entry.color.x, entry.color.y, entry.color.z);
@@ -130,6 +132,7 @@ void ofxColorTree<ObjectClass>::drawRegion() {
 
  template <class ObjectClass>
  void ofxColorTree<ObjectClass>::update() {
+     
     if (treeBuilt == true)  {
         //Start a count down death timer for any leaf nodes which don't have objects or children.
         //when the timer reaches zero, we delete the leaf. If the node is reused before death, we double its lifespan.
@@ -151,7 +154,8 @@ void ofxColorTree<ObjectClass>::drawRegion() {
         int objectListSize = objects.size();
 
         //prune any dead objects from the tree.
-        for (int i = 0; i < objectListSize; i++) {
+        for (int i = 0; i < objects.size(); i++) {
+            
 //            if (objects[i].object -> shouldDelete) {
 //                objects.erase(objects.begin() + i);
 //                objectListSize--;
@@ -172,6 +176,7 @@ void ofxColorTree<ObjectClass>::drawRegion() {
         //recursively update any child nodes.
         for (int flags = active_nodes, index = 0; flags > 0; flags >>=1, index++) {
             if ((flags & 1) == 1) {
+                
                 children[index] -> update();
             }
         }
@@ -209,10 +214,11 @@ void ofxColorTree<ObjectClass>::drawRegion() {
             }
         }
         
-        if (deletedCount == childCount) {
+        if (deletedCount > 0 && deletedCount == childCount) {
             hasChildren = false;
         }
     } else {
+        buildTree();
     }
  };
 
