@@ -8,14 +8,19 @@
 
  #pragma once
 
- #include "ofMain.h"
- #include "BoundingBox.h"
+#include <type_traits>
+#include <glm/vec3.hpp>
+#include "ofMain.h"
+#include "BoundingBox.h"
 #include <limits>
 
 typedef unsigned char byte;
 
 template <class ContainedClass>
 struct NodeData {
+private:
+    static_assert(std::is_base_of<ofNode, ContainedClass>::value, "Provided class does not inherit from ofNode");
+public:
     NodeData() : object(NULL), color(ofVec3f::zero()){};
     NodeData(ContainedClass *o) : object(o), color(ofVec3f::zero()){};
     NodeData(ContainedClass *o, ofVec3f c) : object(o), color(c){};
@@ -27,6 +32,8 @@ struct NodeData {
 
 template <class ObjectClass>
 class ofxColorTree {
+private:
+    static_assert(std::is_base_of<ofNode, ObjectClass>::value, "Provided class does not inherit from ofNode");
 public:
     struct Closest {
         
@@ -77,12 +84,14 @@ public:
     void insert(shared_ptr<NodeData<ObjectClass>> item);
 
  
-    ObjectClass * getClosestByPoint(ObjectClass point);
-    ObjectClass * getClosestByPoint(ObjectClass *point);
+    ObjectClass * getClosestByPoint(ofVec3f point);
+    ObjectClass * getClosestByPoint(ofVec3f *point);
+    ObjectClass * getClosestByPoint(glm::vec3 point);
     ObjectClass * getClosestByPoint(float x, float y, float z);
 
-    ObjectClass * getClosestByColor(ObjectClass color);
-    ObjectClass * getClosestByColor(ObjectClass *color);
+    ObjectClass * getClosestByColor(ofVec3f color);
+    ObjectClass * getClosestByColor(ofVec3f *color);
+    ObjectClass * getClosestByColor(glm::vec3 color);
     ObjectClass * getClosestByColor(float r, float g, float b);
 
     void buildTree();
@@ -105,6 +114,6 @@ public:
     deque<shared_ptr<NodeData<ObjectClass>>> pending;
 
 protected:
-    void getClosest(ObjectClass point, Closest & closestInfo);
+    void getClosest(ofVec3f point, Closest & closestInfo);
 
 };

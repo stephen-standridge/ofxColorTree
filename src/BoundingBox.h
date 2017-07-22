@@ -6,8 +6,10 @@
  //
  //
 
- #pragma once
- #include "ofMain.h"
+#pragma once
+#include "ofMain.h"
+#include <glm/vec3.hpp>
+
 
  class BoundingBox {
  public:
@@ -69,16 +71,17 @@
      ofVec3f getColor(ofVec3f point) {
          return ofVec3f(ofMap(point.x, min.x, max.x, dim.x, bright.x), ofMap(point.y, min.y, max.y, dim.y, bright.y), ofMap(point.z, min.z, max.z, dim.z, bright.z));
      };
-     ofVec3f getColor(ofVec3f *point) {
-         return ofVec3f(ofMap(point -> x, min.x, max.x, dim.x, bright.x), ofMap(point -> y, min.y, max.y, dim.y, bright.y), ofMap(point -> z, min.z, max.z, dim.z, bright.z));
+     
+     ofVec3f getColor(glm::vec3 point) {
+         return ofVec3f(ofMap(point.x, min.x, max.x, dim.x, bright.x), ofMap(point.y, min.y, max.y, dim.y, bright.y), ofMap(point.z, min.z, max.z, dim.z, bright.z));
      };
      
      
-     bool contains(ofVec3f & point){
+     bool contains(ofVec3f point){
          return min.x<=point.x && point.x<=max.x && min.y<=point.y && point.y<=max.y && min.z<=point.z && point.z<=max.z;
      }
-     bool contains(ofVec3f * point) {
-         return min.x<=point -> x && point -> x<=max.x && min.y<=point -> y && point -> y<=max.y && min.z<=point -> z && point -> z<=max.z;
+     bool contains(glm::vec3 point) {
+         return min.x<=point.x && point.x<=max.x && min.y<=point.y && point.y<=max.y && min.z<=point.z && point.z<=max.z;
      };
      
      bool intersects(ofVec3f point, float radius) {

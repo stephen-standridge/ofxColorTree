@@ -13,7 +13,7 @@
     if (!treeBuilt) {
         while (pending.size() != 0) {
             shared_ptr<NodeData<ObjectClass>> item = pending.front();
-            item -> color = region.getColor(item -> object);
+            item -> color = region.getColor(item -> object -> getPosition());
             objects.push_back(item);
             pending.pop_front();
         }
@@ -77,7 +77,7 @@
     //go backwards so that removing them later doesnt mess up the order.
     for (int i = objects.size() - 1; i >= 0; i--) {
         for (int a = 0; a < 8; a++) {
-            if(octant[a].contains(objects[i] -> object)) {
+            if(octant[a].contains(objects[i] -> object -> getPosition())) {
                 list[a].push_back(objects[i]);
                 delist.push_back(i);
                 break;
@@ -189,7 +189,7 @@ void ofxColorTree<ObjectClass>::drawRegion() {
 
             //figure out how far up the tree we need to go to reinsert our moved object
             //try to move the object into an enclosing parent node until we've got full containment
-            while (!current -> region.contains(objects[toMove] -> object)) {
+            while (!current -> region.contains(objects[toMove] -> object -> getPosition())) {
                 if (current -> parent != nullptr) { current = current -> parent; }
                 else break; //prevent infinite loops when we go out of bounds of the root node region
             }
@@ -236,7 +236,7 @@ void ofxColorTree<ObjectClass>::insert(shared_ptr<NodeData<ObjectClass>> item) {
     /*make sure we're not inserting an object any deeper into the tree than we have to.
      -if the current node is an empty leaf node, just insert and leave it.*/
     if (objects.size() < 1 && active_nodes == 0) {
-        item -> color = region.getColor(item -> object);
+        item -> color = region.getColor(item -> object -> getPosition());
         objects.push_back(item);
         return;
     }
@@ -245,7 +245,7 @@ void ofxColorTree<ObjectClass>::insert(shared_ptr<NodeData<ObjectClass>> item) {
     
     //Check to see if the dimensions of the box are greater than the minimum dimensions
     if (dimensions.x <= MIN_SIZE && dimensions.y <= MIN_SIZE && dimensions.z <= MIN_SIZE) {
-        item -> color = region.getColor(item -> object);
+        item -> color = region.getColor(item -> object -> getPosition());
         objects.push_back(item);
         return;
     }
@@ -300,12 +300,12 @@ void ofxColorTree<ObjectClass>::insert(shared_ptr<NodeData<ObjectClass>> item) {
 
     
     
-    if (region.contains(item -> object)) {
+    if (region.contains(item -> object -> getPosition())) {
         bool found = false;
         //we will try to place the object into a child node. If we can't fit it in a child node, then we insert it into the current node object list.
         for (int flags = active_nodes, a = 0; a < 8; flags >>=1, a++) {
             //is the object fully contained within a quadrant?
-            if (childOctant[a].contains(item -> object)) {
+            if (childOctant[a].contains(item -> object -> getPosition())) {
                 if ((flags & 1) == 1) {
                     children[a] -> insert(item);   //Add the item into that tree and let the child tree figure out what to do with it
                 } else {
@@ -321,7 +321,7 @@ void ofxColorTree<ObjectClass>::insert(shared_ptr<NodeData<ObjectClass>> item) {
             }
         }
         if(!found) {
-            item -> color = region.getColor(item -> object);
+            item -> color = region.getColor(item -> object -> getPosition());
             objects.push_back(item);
         }
         
@@ -334,7 +334,7 @@ void ofxColorTree<ObjectClass>::insert(shared_ptr<NodeData<ObjectClass>> item) {
 };
 
 template <class ObjectClass>
-void ofxColorTree<ObjectClass>::getClosest(ObjectClass point, Closest & closestInfo) {
+void ofxColorTree<ObjectClass>::getClosest(ofVec3f point, Closest & closestInfo) {
     if (hasChildren) {
         
         // we have no starting point yet
@@ -374,7 +374,7 @@ void ofxColorTree<ObjectClass>::getClosest(ObjectClass point, Closest & closestI
             
             ObjectClass * item = objects[i] -> object;
             
-            float dist = ofDistSquared(point.x, point.y, point.z, item -> x, item -> y, item -> z);
+            float dist = ofDistSquared(point.x, point.y, point.z, item -> getPosition().x, item -> getPosition().y, item -> getPosition().z);
             
             if (dist < closestInfo.dist) {
                 closestInfo.dist = dist;
@@ -388,14 +388,21 @@ void ofxColorTree<ObjectClass>::getClosest(ObjectClass point, Closest & closestI
 }
 
 template <class ObjectClass>
-ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(ObjectClass color) {
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(ofVec3f color) {
     ofVec3f point = region.getPoint(color);
     
     return getClosestByPoint(point);
 };
 
 template <class ObjectClass>
-ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(ObjectClass *color) {
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(glm::vec3 color) {
+    ofVec3f point = region.getPoint(color);
+    
+    return getClosestByPoint(point);
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(ofVec3f *color) {
     ofVec3f point = region.getPoint(color);
     return getClosestByPoint(point);
 };
@@ -407,17 +414,22 @@ ObjectClass * ofxColorTree<ObjectClass>::getClosestByColor(float r, float g, flo
 };
 
 template <class ObjectClass>
-ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(ObjectClass *point) {
-    return getClosestByPoint(ObjectClass(point -> x, point -> y, point -> z));
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(ofVec3f *point) {
+    return getClosestByPoint(ofVec3f(point -> x, point -> y, point -> z));
+};
+
+template <class ObjectClass>
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(glm::vec3 point) {
+    return getClosestByPoint(ofVec3f(point.x, point.y, point.z));
 };
 
 template <class ObjectClass>
 ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(float x, float y, float z) {
-    return getClosestByPoint(ObjectClass(x, y, z));
+    return getClosestByPoint(ofVec3f(x, y, z));
 };
 
 template <class ObjectClass>
-ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(ObjectClass point) {
+ObjectClass * ofxColorTree<ObjectClass>::getClosestByPoint(ofVec3f point) {
     Closest closest = Closest();
     getClosest(point, closest);
     
