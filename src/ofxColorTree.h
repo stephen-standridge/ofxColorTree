@@ -9,31 +9,31 @@
  #pragma once
 
 #include <type_traits>
+#include <limits>
 #include <glm/vec3.hpp>
 #include "ofMain.h"
-#include "BoundingBox.h"
-#include <limits>
+#include "ofxColorTreeBoundingBox.h"
 
 typedef unsigned char byte;
 
 template <class ContainedClass>
-struct NodeData {
-private:
-    static_assert(std::is_base_of<ofNode, ContainedClass>::value, "Provided class does not inherit from ofNode");
-public:
-    NodeData() : object(NULL), color(ofVec3f::zero()){};
-    NodeData(ContainedClass *o) : object(o), color(ofVec3f::zero()){};
-    NodeData(ContainedClass *o, ofVec3f c) : object(o), color(c){};
-    ofVec3f color;
-    bool shouldMove = false;
-    bool shouldDelete = false;
-    ContainedClass * object;
+struct ofxColorTreeNode {
+//    private:
+//        static_assert(std::is_base_of<ofNode, ContainedClass>::value, "Provided class does not inherit from ofNode");
+    public:
+        ofxColorTreeNode() : object(NULL), color(ofVec3f::zero()){};
+        ofxColorTreeNode(ContainedClass *o) : object(o), color(ofVec3f::zero()){};
+        ofxColorTreeNode(ContainedClass *o, ofVec3f c) : object(o), color(c){};
+        ofVec3f color;
+        bool shouldMove = false;
+        bool shouldDelete = false;
+        ContainedClass * object;
 };
 
 template <class ObjectClass>
 class ofxColorTree {
-private:
-    static_assert(std::is_base_of<ofNode, ObjectClass>::value, "Provided class does not inherit from ofNode");
+//private:
+//    static_assert(std::is_base_of<ofNode, ObjectClass>::value, "Provided class does not inherit from ofNode");
 public:
     struct Closest {
         
@@ -47,20 +47,20 @@ public:
         currentLife = -1;
     };
 
-    ofxColorTree(BoundingBox _region) {
+    ofxColorTree(ofxColorTreeBoundingBox _region) {
         region = _region;
         currentLife = -1;
     };
 
-    ofxColorTree(BoundingBox _region, vector<ObjectClass*> _objects) {
+    ofxColorTree(ofxColorTreeBoundingBox _region, vector<ObjectClass*> _objects) {
         for(ObjectClass* object:_objects) {
-            pending.push_back(NodeData<ObjectClass>(object));
+            pending.push_back(ofxColorTreeNode<ObjectClass>(object));
         }
         region = _region;
         currentLife = -1;
     };
  
-    ofxColorTree(BoundingBox _region, vector<NodeData<ObjectClass>> _objects) {
+    ofxColorTree(ofxColorTreeBoundingBox _region, vector<ofxColorTreeNode<ObjectClass>> _objects) {
         for(auto object:_objects) {
             pending.push_back(*object);
         }
@@ -68,7 +68,7 @@ public:
         currentLife = -1;
     };
     
-    ofxColorTree(BoundingBox _region, vector<shared_ptr<NodeData<ObjectClass>>> _objects) {
+    ofxColorTree(ofxColorTreeBoundingBox _region, vector<shared_ptr<ofxColorTreeNode<ObjectClass>>> _objects) {
         for(auto object:_objects) {
             pending.push_back(object);
         }
@@ -80,8 +80,8 @@ public:
     void setup();
     void drawRegion();
     void update();
-    shared_ptr<NodeData<ObjectClass>> insert(ObjectClass *item);
-    void insert(shared_ptr<NodeData<ObjectClass>> item);
+    shared_ptr<ofxColorTreeNode<ObjectClass>> insert(ObjectClass *item);
+    void insert(shared_ptr<ofxColorTreeNode<ObjectClass>> item);
 
  
     ObjectClass * getClosestByPoint(ofVec3f point);
@@ -107,11 +107,11 @@ public:
     bool treeBuilt = false;
     bool hasChildren = false;
 
-    BoundingBox region;
+    ofxColorTreeBoundingBox region;
     ofxColorTree * children[8];
     ofxColorTree * parent;
-    vector<shared_ptr<NodeData<ObjectClass>>> objects;
-    deque<shared_ptr<NodeData<ObjectClass>>> pending;
+    vector<shared_ptr<ofxColorTreeNode<ObjectClass>>> objects;
+    deque<shared_ptr<ofxColorTreeNode<ObjectClass>>> pending;
 
 protected:
     void getClosest(ofVec3f point, Closest & closestInfo);

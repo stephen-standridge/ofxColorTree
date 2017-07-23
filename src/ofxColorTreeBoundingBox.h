@@ -1,5 +1,5 @@
  
- //  BoundingBox.hpp
+ //  ofxColorTreeBoundingBox.hpp
  //  tree
  //
  //  Created by kevin ambrosia on 7/11/17.
@@ -11,9 +11,9 @@
 #include <glm/vec3.hpp>
 
 
- class BoundingBox {
+ class ofxColorTreeBoundingBox {
  public:
-     BoundingBox() {
+     ofxColorTreeBoundingBox() {
          min = ofVec3f::zero();
          max = ofVec3f::zero();
          dim = ofVec3f::zero();
@@ -22,7 +22,7 @@
          box.setPosition((min.x + max.x)/2.0, (min.y + max.y)/2.0, (min.z + max.z)/2.0);
      };
 
-     BoundingBox(ofVec3f _min, ofVec3f _max) {
+     ofxColorTreeBoundingBox(ofVec3f _min, ofVec3f _max) {
          min = _min;
          max = _max;
          dim = ofVec3f::zero();
@@ -31,7 +31,7 @@
          box.setPosition((min.x + max.x)/2.0, (min.y + max.y)/2.0, (min.z + max.z)/2.0);
      };
 
-     BoundingBox(ofVec3f _min, ofVec3f _max, ofVec3f _dim, ofVec3f _bright) {
+     ofxColorTreeBoundingBox(ofVec3f _min, ofVec3f _max, ofVec3f _dim, ofVec3f _bright) {
          min = _min;
          max = _max;
          dim = _dim;
