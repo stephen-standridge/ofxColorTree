@@ -13,22 +13,9 @@
 #include <glm/vec3.hpp>
 #include "ofMain.h"
 #include "ofxColorTreeBoundingBox.h"
+#include "ofxColorTreeNode.h"
 
 typedef unsigned char byte;
-
-template <class ContainedClass>
-struct ofxColorTreeNode {
-//    private:
-//        static_assert(std::is_base_of<ofNode, ContainedClass>::value, "Provided class does not inherit from ofNode");
-    public:
-        ofxColorTreeNode() : object(NULL), color(ofVec3f::zero()){};
-        ofxColorTreeNode(ContainedClass *o) : object(o), color(ofVec3f::zero()){};
-        ofxColorTreeNode(ContainedClass *o, ofVec3f c) : object(o), color(c){};
-        ofVec3f color;
-        bool shouldMove = false;
-        bool shouldDelete = false;
-        ContainedClass * object;
-};
 
 template <class ObjectClass>
 class ofxColorTree {
